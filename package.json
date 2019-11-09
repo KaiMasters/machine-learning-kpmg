@@ -4,16 +4,21 @@
   "description": "KPMG Hackathon Machine Learning Application",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "start": "node index.js",
+    "watch": "nodemon index.js"
   },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/KaiMasters/machine-learning-kpmg.git"
   },
-  "author": "",
+  "author": "Cameron Cipriano, Kate Goodwin, Kai Masters, Alec Mitrokastas, Michael Port, Steven Shi, ",
   "license": "ISC",
   "bugs": {
     "url": "https://github.com/KaiMasters/machine-learning-kpmg/issues"
   },
-  "homepage": "https://github.com/KaiMasters/machine-learning-kpmg#readme"
+  "homepage": "https://github.com/KaiMasters/machine-learning-kpmg#readme",
+  "dependencies": {
+    "nodemon": "1.19.4",
+    "@tensorflow/tfjs-node": "1.3.1"
+  }
 }
