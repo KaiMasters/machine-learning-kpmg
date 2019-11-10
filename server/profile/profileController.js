@@ -2,7 +2,7 @@ const Profile = require('./profileModel');
 const { validationResult } = require('express-validator');
 
 exports.newUser = (req, res, next) => {
-    console.log(`Request object: ${JSON.stringify(req, null, ' ')}`);
+    console.log(`Request object: ${JSON.stringify(req.body, null, ' ')}`);
     console.log('New profile being inserted into the database');
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
