@@ -7,8 +7,8 @@ const profileSchema = new Schema({
         required: true
     },
     interests: {
-        type: Array,
-        required: true
+        type: Schema.Types.Array,
+        required: true,
     }
 });
 
