@@ -4,7 +4,7 @@ const { validationResult } = require('express-validator');
 exports.getProducts = (req, res, next) => {
   console.log('Obtaining products from the database...');
   res.json('Obtaining products is working!');
-  console.log('Successfully returned products')
+  console.log('Successfully returned products');
 };
 
 exports.createProduct = (req, res, next) => {
