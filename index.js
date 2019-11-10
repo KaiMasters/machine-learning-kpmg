@@ -12,7 +12,7 @@ const mongoURI = process.env.MONGODB_URI || 'mongodb://localhost/machine-learnin
 mongoose
     .connect(mongoURI, { useNewUrlParser: true, useFindAndModify: false, useCreateIndex: true, useUnifiedTopology: true })
     .then(data => console.log(`KPMG Challenge Initiated. Machine Learning Underway. South Korea here we come baby ;)`))
-    .catch(err => console.log(`Mission failed... We'll get 'em next time`));
+    .catch(err => console.log(`Mission failed... Could not connect to the database. We'll get 'em next time: ${err}`));
 
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
@@ -34,4 +34,4 @@ app.use((err, req, res, next) => {
 
 const { PORT } = config;
 server.listen(PORT);
-console.log(`Server listening on port ${PORT}`)
+console.log(`Server listening on port ${PORT}`);
