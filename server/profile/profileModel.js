@@ -6,7 +6,7 @@ const profileSchema = new Schema({
         type: String,
         required: true
     },
-    categories: {
+    interests: {
         type: Array,
         required: true
     }
