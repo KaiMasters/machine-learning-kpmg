@@ -1,5 +1,6 @@
 const express = require('express');
 const mongoose = require('mongoose');
+const cors = require('cors');
 const http = require('http');
 const config = require('./config/config');
 
@@ -14,6 +15,7 @@ mongoose
     .then(data => console.log(`KPMG Challenge Initiated. Machine Learning Underway. South Korea here we come baby ;)`))
     .catch(err => console.log(`Mission failed... Could not connect to the database. We'll get 'em next time: ${err}`));
 
+app.use(cors());
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 

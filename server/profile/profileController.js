@@ -13,10 +13,10 @@ exports.newUser = (req, res, next) => {
     Profile.create(newProfile)
         .then(createdProfile => {
             console.log('New profile saved successfully');
-            return res.json('Profile successfully saved!');
+            return res.status(201).json('Profile successfully saved!');
         })
         .catch(err => {
             console.log(`Could not insert new profile: ${err}`);
-            return res.json(`Could not insert new profile. Received an error: ${err}`)
+            return res.status(500).json(`Could not insert new profile. Received an error: ${err}`)
         });
 };
