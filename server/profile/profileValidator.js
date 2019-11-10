@@ -6,7 +6,7 @@ exports.newProfile = function() {
       .exists()
       .withMessage('You must have an occupation to survive my guy')
       .trim()
-      .isLength({  min: 1 })
+      .isLength({  min: 1  })
       .withMessage(`Your occupation can't be empty`)
       .stripLow()
       .escape(),
