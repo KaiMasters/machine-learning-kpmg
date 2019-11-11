@@ -160,12 +160,11 @@ class MachineLearner {
                 orderedSimilarityMatrix[sim] = unorderedSimilarityMatrix[sim];
               });
 
-              console.log(JSON.stringify(orderedSimilarityMatrix, null, ' '));
+              //console.log(JSON.stringify(orderedSimilarityMatrix, null, ' '));
               // preparing the return information
               bigReturnObject.orderedSimilarities = orderedSimilarityMatrix;
-              bigReturnObject.similaritySum = similaritySum;
 
-              console.log(similaritySum);
+              //console.log(similaritySum);
 
               // Pick the top 10 similar profiles:
               const orderedKeys = Object.keys(orderedSimilarityMatrix);
@@ -176,6 +175,8 @@ class MachineLearner {
                 // calculate the similarity sum of the top 10 users
                 similaritySum += Number(keyWeWant);
               }
+
+              bigReturnObject.similaritySum = similaritySum;
 
               //   bigReturnObject.mostSimilarUsers = mostSimilarUsers;
               //   console.log(JSON.stringify(mostSimilarUsers, null, ' '));
@@ -208,10 +209,10 @@ class MachineLearner {
                     finishedProductFinds++;
                     if (finishedProductFinds === mostSimilarUsers.length) {
                        this.finishOffMachineLearning(unorderedRecommendedProducts, bigReturnObject);
-                       return bigReturnObject;
+                       resolve(bigReturnObject);
                     }
                     else {
-                      return bigReturnObject;
+                      resolve(bigReturnObject);
                     }
                   });
               }
