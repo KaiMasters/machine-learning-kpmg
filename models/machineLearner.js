@@ -121,6 +121,7 @@ class MachineLearner {
 
   recommend(userID) {
     return new Promise((resolve, reject) => {
+      let bigReturnObject = {};
       Profile.findById(userID)
         .populate('purchases')
         .exec()
@@ -158,6 +159,10 @@ class MachineLearner {
                 orderedSimilarityMatrix[sim] = unorderedSimilarityMatrix[sim];
               });
 
+              // preparing the return information
+              bigReturnObject.orderedSimilarities = orderedSimilarityMatrix;
+              bigReturnObject.similaritySum = similaritySum;
+
               console.log(JSON.stringify(orderedSimilarityMatrix, null, ' '));
               // Pick the top 10 similar profiles:
               const orderedKeys = Object.keys(orderedSimilarityMatrix);
@@ -168,7 +173,8 @@ class MachineLearner {
                 // calculate the similarity sum of the top 10 users
                 similaritySum += Number(keyWeWant);
               }
-              console.log(`Similarity Sum: ${similaritySum}`);
+
+              bigReturnObject.mostSimilarUsers = mostSimilarUsers;
 
               // now we need to calculate a weight of 1 * similarity if comparison user purchased a product
               // for every product in the db that is not one the current user has purchased:
@@ -178,8 +184,23 @@ class MachineLearner {
               let unorderedRecommendedProducts = {};
               let orderedRecommendedProducts = {};
               let mostSimilarProducts = [];
-              
-
+              let sumProductSimilarity = 0;
+              for (let prof = 0; prof < mostSimilarUsers.length; prof++) {
+                let currUserPurchases = [];
+                const simUser =  mostSimilarUsers[prof];
+                simUser.purchases.forEach(product => {
+                  currUserPurchases.push(product._id);
+                });
+                Product.find({ $and: [{ _id: { $nin: productsAlreadyPurchased } }, { _id: { $in: currUserPurchases } }] })
+                  .exec()
+                  .then(foundProducts => {
+                    if (!foundProducts) {
+                      return console.log('Compared user did not have any additional products than the base');
+                    }
+                    sumProductSimilarity += Number(orderedKeys[prof]);
+                  })
+                  .catch(err => console.log(`Error finding products between already purchased and current user purchases: ${err}`));
+              }
             })
             .catch(err => console.log(`Mongo experienced an error retrieving all profiles for recommendations. Error: ${err}`))
         })

@@ -15,9 +15,9 @@ mongoose
   .connect(mongoURI, {useNewUrlParser: true, useFindAndModify: false, useCreateIndex: true, useUnifiedTopology: true})
   .then(data => {
     console.log(`KPMG Challenge Initiated. Machine Learning Underway. South Korea here we come baby ;)`);
-    MachineLearner.recommend("5dc9407ca6aca9469c8559b7")
-      .then(data => console.log("We IN DIS"))
-      .catch(err => console.log(`Error occurred: ${err}`));
+    // MachineLearner.recommend("5dc9407ca6aca9469c8559b7")
+    //   .then(data => console.log("We IN DIS"))
+    //   .catch(err => console.log(`Error occurred: ${err}`));
   })
   .catch(err => console.log(`Mission failed... Could not connect to the database. We'll get 'em next time: ${err}`));
 

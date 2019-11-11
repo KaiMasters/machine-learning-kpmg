@@ -27,5 +27,8 @@ exports.createProduct = (req, res, next) => {
 };
 
 exports.recommendProducts = (req, res, next) => {
-  const userID = "5dc9407ca6aca9469c8559b7";
+  req.json({
+    sook: "Me balls",
+    and: "cook"
+  });
 }
