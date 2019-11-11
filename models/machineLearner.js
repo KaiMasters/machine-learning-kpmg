@@ -17,6 +17,7 @@ class MachineLearner {
     this._labelEncode(products, this.productMatrix);
 
     this.printConversionMatrix = this.printConversionMatrix.bind(this);
+    this._convertToNumericalMatrix = this._convertToNumericalMatrix.bind(this);
   }
 
   printConversionMatrix(type) {
@@ -55,10 +56,10 @@ class MachineLearner {
     let departmentClass = 0;
 
     for (let row = 0; row < objectArray.length; row++) {
-      const brandItem = objectArray[row].Brand.toLowerCase();
-      const productItem = objectArray[row].Product.toLowerCase();
-      const categoryItem = objectArray[row].Category.toLowerCase();
-      const departmentItem = objectArray[row].Department.toLowerCase();
+      const brandItem = objectArray[row].brand.toLowerCase();
+      const productItem = objectArray[row].product.toLowerCase();
+      const categoryItem = objectArray[row].category.toLowerCase();
+      const departmentItem = objectArray[row].department.toLowerCase();
 
       output.brand = brandTracker;
       output.product = productTracker;
@@ -100,48 +101,48 @@ class MachineLearner {
     const convertedOccupation = this.occupationMatrix[user.occupation];
     let convertedInterests = new Array(interests.length).fill(0);
     user.interests.forEach(interest => {
-      const indexOfOne = this.interestMatrix[interest].findIndex(1);
+      const indexOfOne = this.interestMatrix[interest].indexOf(1);
       convertedInterests[indexOfOne] = 1;
     });
     let convertedProducts = [];
     user.purchases.forEach(product => {
-      convertedProducts.push(this.productMatrix['brand'][product.brand]);
-      convertedProducts.push(this.productMatrix['product'][product.product]);
-      convertedProducts.push(this.productMatrix['category'][product.category]);
-      convertedProducts.push(this.productMatrix['department'][product.department]);
+      const convProduct = product.toObject();
+      convertedProducts.push(this.productMatrix['brand'][convProduct.Brand.toLowerCase()]);
+      convertedProducts.push(this.productMatrix['product'][convProduct.Product.toLowerCase().trim().toString()]);
+      convertedProducts.push(this.productMatrix['category'][convProduct.Category.toLowerCase()]);
+      convertedProducts.push(this.productMatrix['department'][convProduct.Department.toLowerCase()]);
     });
-    return convertedOccupation.concat(convertedInterests).concat(convertedProducts);
+    return (convertedOccupation.concat(convertedInterests).concat(convertedProducts));
   }
 
-  predict(itemID) {
-    let myProfile = null;
-    Profile.findById("5dc9407ca6aca9469c8559b7", (err, foundProfile) => {
-      if (err) {
-        console.log(`Mongo experienced an error retrieving my profile. Error: ${err}`);
-      }
-      myProfile = foundProfile;
-    });
+  recommend(userID) {
+    return new Promise((resolve, reject) => {
+      Profile.findById(userID)
+        .populate('purchases')
+        .exec()
+        .then(foundProfile => {
+          if (!foundProfile) {
+            console.log('Could not find this user...');
+            return reject()
+          }
+          // convert categorical data to numerical for modeling purposes
+          const convertedUserMatrix = this._convertToNumericalMatrix(foundProfile);
 
-    let productToDetermine = null;
-    Product.findById(itemId, (err, foundProduct) => {
-      if (err) {
-        console.log(`Mongo experienced an error retrieving product with id: ${itemID}. Error: ${err}`);
-      }
-      productToDetermine = foundProduct;
-    });
-
-    Profile.find({})
-      .populate('purchases')
-      .exec()
-      .then(allProfiles => {
-        // 1. Grab all profiles
-        // 2. convert each profile to its associated numerical vector
-        // 3. For each other user compared with myProfile:
-        //        calculate similarity between users
-        // 4. Keep running sum of similarities to other users who have bought the product
-        // 5. If other user has purchased product that my profile hasn't, then attach a 1 as the weight, 0 otherwise
-      })
-      .catch(err => console.log(`Mongo experienced an error retrieving all profiles for recommendations. Error: ${err}`))
+          Profile.find({})
+            .populate('purchases')
+            .exec()
+            .then(allProfiles => {
+              // 1. Grab all profiles
+              // 2. convert each profile to its associated numerical vector
+              // 3. For each other user compared with myProfile:
+              //        calculate similarity between users
+              // 4. Keep running sum of similarities to other users who have bought the product
+              // 5. If other user has purchased product that my profile hasn't, then attach a 1 as the weight, 0 otherwise
+            })
+            .catch(err => console.log(`Mongo experienced an error retrieving all profiles for recommendations. Error: ${err}`))
+        });
+    })
+      .catch(err => reject(err));
   }
 }
 

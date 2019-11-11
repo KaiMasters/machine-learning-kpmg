@@ -25,3 +25,7 @@ exports.createProduct = (req, res, next) => {
       res.status(500).json(`Error creating new product: ${err}`)
     });
 };
+
+exports.recommendProducts = (req, res, next) => {
+  const userID = "5dc9407ca6aca9469c8559b7";
+}
