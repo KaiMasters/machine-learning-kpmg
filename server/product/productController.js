@@ -27,8 +27,8 @@ exports.createProduct = (req, res, next) => {
 };
 
 exports.recommendProducts = (req, res, next) => {
-  req.json({
+  res.json({
     sook: "Me balls",
     and: "cook"
   });
-}
+};
