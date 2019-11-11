@@ -12,6 +12,7 @@ class MachineLearner {
     this.interestMatrix = {};
     this.productMatrix = {};
     this.myProfile = null;
+    this.convertedSize = 0;
     this._dummyEncode(occupations, this.occupationMatrix);
     this._dummyEncode(interests, this.interestMatrix);
     this._labelEncode(products, this.productMatrix);
@@ -127,12 +128,27 @@ class MachineLearner {
           }
           // convert categorical data to numerical for modeling purposes
           const convertedUserMatrix = this._convertToNumericalMatrix(foundProfile);
+          this.convertedSize = convertedUserMatrix.length;
 
           Profile.find({})
-            .populate('purchases')
             .exec()
             .then(allProfiles => {
-              // 1. Grab all profiles
+              if (!allProfiles) {
+                return reject('There are no profiles in the database to recommend from');
+              }
+              let convertedProfileMatrices = [];
+              let similarityMatrix = [];
+              for (let prof = 0; prof < allProfiles.length; prof++) {
+                // convert each user's categorical profile to categorical data
+                convertedProfileMatrices.push(this._convertToNumericalMatrix(allProfiles[prof]));
+                this._resizeVectors(convertedUserMatrix, convertedProfileMatrices[prof]);
+                similarityMatrix.push(this._calcSimilarity(convertedUserMatrix, convertedProfileMatrices[prof]));
+              }
+
+              allProfiles.forEach(profile => {
+                convertedProfileMatrices.push(this._convertToNumericalMatrix(profile));
+                similarityMatrix.push(this._calcSimilarity(convertedUserMatrix, ))
+              });
               // 2. convert each profile to its associated numerical vector
               // 3. For each other user compared with myProfile:
               //        calculate similarity between users
@@ -143,6 +159,52 @@ class MachineLearner {
         });
     })
       .catch(err => reject(err));
+  }
+
+  _resizeVectors(baseUser, comparisonUser) {
+    const currBaseUserSize = baseUser.length;
+    const comparisonLength = comparisonUser.length;
+
+    // Case 1: Comparison user has more purchases than the base when base is original size
+    if (comparisonLength > currBaseUserSize) {
+      for (let diff = comparisonLength - currBaseUserSize; diff > 0; diff--) {
+        baseUser.push(0);
+      }
+    }
+    // Case 2: base has more purchases than the comparison when base is original length (no previous shifting)
+    else if (currBaseUserSize > comparisonLength && currBaseUserSize === this.convertedSize) {
+      // if base has not changed sizes and is larger, then the comparison must change
+      for (let diff = currBaseUserSize - comparisonLength; diff > 0; diff--) {
+        comparisonUser.push(0);
+      }
+    }
+    // Case 3: base has more purchases than the comparison but the base has been previously extended (no meaningful data)
+    else if (currBaseUserSize > comparisonLength && currBaseUserSize !== this.convertedSize) {
+      // Inner case 1: Base and Comparison are truly the same size
+      if (this.convertedSize === comparisonLength) {
+        for (let diff = currBaseUserSize - comparisonLength; diff > 0; diff--) {
+          comparisonUser.pop();
+        }
+      }
+      // Inner case 2: Base is truly larger than the comparison
+      else  if(this.convertedSize > comparisonLength) {
+        // bring base back to original size
+        for (let diff = currBaseUserSize - this.convertedSize; diff > 0; diff--) {
+          baseUser.pop()
+        }
+        // bring the comparison up to the base size
+        for (let diff = this.convertedSize - comparisonLength; diff > 0; diff --) {
+          comparisonUser.push(0);
+        }
+      }
+      // Inner case 3: Base is truly smaller than the comparison
+      else {
+        // bring the base user down to the comparison
+        for (let diff = currBaseUserSize - comparisonLength; diff > 0; diff--) {
+          baseUser.pop();
+        }
+      }
+    }
   }
 }
 
