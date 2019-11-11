@@ -1,12 +1,13 @@
 const tf = require('@tensorflow/tfjs-node');
 const kNNClassifier = require('@tensorflow-models/knn-classifier');
+const convertInputData = require('./inputConverter');
 
 class MachineLearner {
   constructor() {
-    this.classifier = kNNClassifier.create();
-
     this.updateClassifier = this.updateClassifier.bind(this);
+    this.converter = convertInputData();
   }
+
 
   updateClassifier(examples, labels) {
 
