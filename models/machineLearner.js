@@ -91,9 +91,26 @@ class MachineLearner {
    * @param vec2 tf.tensor of another user + product data
    * @returns {number} -1 <= number <= 1 (cosine of the vectors)
    */
-  calcSimilarity(vec1, vec2) {
+  _calcSimilarity(vec1, vec2) {
     return (vec1.dot(vec2).arraySync())
       / (Math.sqrt(vec1.square().sum().arraySync()) * Math.sqrt(vec2.square().sum().arraySync()));
+  }
+
+  _convertToNumericalMatrix(user) {
+    const convertedOccupation = this.occupationMatrix[user.occupation];
+    let convertedInterests = new Array(interests.length).fill(0);
+    user.interests.forEach(interest => {
+      const indexOfOne = this.interestMatrix[interest].findIndex(1);
+      convertedInterests[indexOfOne] = 1;
+    });
+    let convertedProducts = [];
+    user.purchases.forEach(product => {
+      convertedProducts.push(this.productMatrix['brand'][product.brand]);
+      convertedProducts.push(this.productMatrix['product'][product.product]);
+      convertedProducts.push(this.productMatrix['category'][product.category]);
+      convertedProducts.push(this.productMatrix['department'][product.department]);
+    });
+    return convertedOccupation.concat(convertedInterests).concat(convertedProducts);
   }
 
   predict(itemID) {
@@ -112,6 +129,19 @@ class MachineLearner {
       }
       productToDetermine = foundProduct;
     });
+
+    Profile.find({})
+      .populate('purchases')
+      .exec()
+      .then(allProfiles => {
+        // 1. Grab all profiles
+        // 2. convert each profile to its associated numerical vector
+        // 3. For each other user compared with myProfile:
+        //        calculate similarity between users
+        // 4. Keep running sum of similarities to other users who have bought the product
+        // 5. If other user has purchased product that my profile hasn't, then attach a 1 as the weight, 0 otherwise
+      })
+      .catch(err => console.log(`Mongo experienced an error retrieving all profiles for recommendations. Error: ${err}`))
   }
 }
 
