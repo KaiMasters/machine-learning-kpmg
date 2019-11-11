@@ -9,6 +9,10 @@ const profileSchema = new Schema({
     interests: {
         type: Schema.Types.Array,
         required: true,
+    },
+    purchases: {
+        type: Schema.Types.ObjectId,
+        ref: 'product'
     }
 });
 
