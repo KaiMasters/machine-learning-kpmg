@@ -1,6 +1,5 @@
 module.exports = [
   "Account Coordinator",
-  "Account Coordinator",
   "Account Executive",
   "Account Representative",
   "Accounting Assistant",

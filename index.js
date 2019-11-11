@@ -3,6 +3,7 @@ const mongoose = require('mongoose');
 const cors = require('cors');
 const http = require('http');
 const config = require('./config/config');
+const MachineLearner = require('./models/machineLearner');
 
 const app = express();
 const server = http.createServer(app);
@@ -37,3 +38,6 @@ app.use((err, req, res, next) => {
 const { PORT } = config;
 server.listen(PORT);
 console.log(`Server listening on port ${PORT}`);
+//console.log(`Occupation Matrix: ${MachineLearner.printConversionMatrix('occupation')}`);
+//console.log(`Interest Matrix: ${MachineLearner.printConversionMatrix('interests')}`);
+console.log(`Product Matrix: ${MachineLearner.printConversionMatrix('products')}`);
