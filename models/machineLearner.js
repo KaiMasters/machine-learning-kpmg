@@ -20,6 +20,7 @@ class MachineLearner {
     this.printConversionMatrix = this.printConversionMatrix.bind(this);
     this._convertToNumericalMatrix = this._convertToNumericalMatrix.bind(this);
     this._resizeVectors = this._resizeVectors.bind(this);
+    this.finishOffMachineLearning = this.finishOffMachineLearning.bind(this);
   }
 
   printConversionMatrix(type) {
@@ -135,7 +136,7 @@ class MachineLearner {
           this.convertedSize = convertedUserMatrix.length;
 
           // find every other user
-          Profile.find({ _id: { $ne: userID } })
+          Profile.find({_id: {$ne: userID}})
             .populate('purchases')
             .exec()
             .then(allProfiles => {
@@ -159,11 +160,13 @@ class MachineLearner {
                 orderedSimilarityMatrix[sim] = unorderedSimilarityMatrix[sim];
               });
 
+              console.log(JSON.stringify(orderedSimilarityMatrix, null, ' '));
               // preparing the return information
               bigReturnObject.orderedSimilarities = orderedSimilarityMatrix;
               bigReturnObject.similaritySum = similaritySum;
 
-              console.log(JSON.stringify(orderedSimilarityMatrix, null, ' '));
+              console.log(similaritySum);
+
               // Pick the top 10 similar profiles:
               const orderedKeys = Object.keys(orderedSimilarityMatrix);
               for (let key = 0; key < 10; key++) {
@@ -174,9 +177,9 @@ class MachineLearner {
                 similaritySum += Number(keyWeWant);
               }
 
-            //   bigReturnObject.mostSimilarUsers = mostSimilarUsers;
-            //   console.log(JSON.stringify(mostSimilarUsers, null, ' '));
-            //
+              //   bigReturnObject.mostSimilarUsers = mostSimilarUsers;
+              //   console.log(JSON.stringify(mostSimilarUsers, null, ' '));
+              //
               // now we need to calculate a weight of 1 * similarity if comparison user purchased a product
               // for every product in the db that is not one the current user has purchased:
               const productsAlreadyPurchased = [];
@@ -190,7 +193,7 @@ class MachineLearner {
                 simUser.purchases.forEach(product => {
                   currUserPurchases.push(product._id);
                 });
-                Product.find({ $and: [ { _id: { $nin: [...productsAlreadyPurchased] } }, { _id: { $in: [...currUserPurchases] } } ] })
+                Product.find({$and: [{_id: {$nin: [...productsAlreadyPurchased]}}, {_id: {$in: [...currUserPurchases]}}]})
                   .exec((err, foundProducts) => {
                     if (err) {
                       return console.log(`error from mongoose: ${err}`)
@@ -204,7 +207,11 @@ class MachineLearner {
                     });
                     finishedProductFinds++;
                     if (finishedProductFinds === mostSimilarUsers.length) {
-                      return this.finishOffMachineLearning(unorderedRecommendedProducts, bigReturnObject)
+                       this.finishOffMachineLearning(unorderedRecommendedProducts, bigReturnObject);
+                       return bigReturnObject;
+                    }
+                    else {
+                      return bigReturnObject;
                     }
                   });
               }
@@ -223,17 +230,17 @@ class MachineLearner {
     });
 
     bigObject.orderedRecommendations = orderedRecommendedProducts;
-    console.log(JSON.stringify(orderedRecommendedProducts, null, ' '));
 
-      const orderedKeysRecommendations = Object.keys(orderedRecommendedProducts);
-      for (let key = 0; key < 5; key++) {
-        const keyWeWant = orderedKeysRecommendations[key];
-        const productWeWant = orderedRecommendedProducts[keyWeWant];
-        recommendedProducts.push(productWeWant);
-      }
-      bigObject.recommendedProducts = recommendedProducts;
-      console.log(JSON.stringify(recommendedProducts, null, ' '));
-      return bigObject;
+    const orderedKeysRecommendations = Object.keys(orderedRecommendedProducts);
+    for (let key = 0; key < 5; key++) {
+      const keyWeWant = orderedKeysRecommendations[key];
+      const productWeWant = orderedRecommendedProducts[keyWeWant];
+      recommendedProducts.push(productWeWant);
+    }
+    bigObject.recommendedProducts = recommendedProducts;
+
+    console.log(JSON.stringify(recommendedProducts, null, ' '));
+    return bigObject;
   }
 
   _resizeVectors(baseUser, comparisonUser) {
@@ -262,13 +269,13 @@ class MachineLearner {
         }
       }
       // Inner case 2: Base is truly larger than the comparison
-      else  if(this.convertedSize > comparisonLength) {
+      else if (this.convertedSize > comparisonLength) {
         // bring base back to original size
         for (let diff = currBaseUserSize - this.convertedSize; diff > 0; diff--) {
           baseUser.pop()
         }
         // bring the comparison up to the base size
-        for (let diff = this.convertedSize - comparisonLength; diff > 0; diff --) {
+        for (let diff = this.convertedSize - comparisonLength; diff > 0; diff--) {
           comparisonUser.push(0);
         }
       }
