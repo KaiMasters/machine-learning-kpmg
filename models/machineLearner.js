@@ -208,11 +208,7 @@ class MachineLearner {
                     });
                     finishedProductFinds++;
                     if (finishedProductFinds === mostSimilarUsers.length) {
-                       this.finishOffMachineLearning(unorderedRecommendedProducts, bigReturnObject);
-                       resolve(bigReturnObject);
-                    }
-                    else {
-                      resolve(bigReturnObject);
+                       resolve(this.finishOffMachineLearning(unorderedRecommendedProducts, bigReturnObject));
                     }
                   });
               }
