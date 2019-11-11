@@ -1,4 +1,4 @@
-// const tf = require('@tensorflow/tfjs-node');
+const tf = require('@tensorflow/tfjs-node');
 // const kNNClassifier = require('@tensorflow-models/knn-classifier');
 const occupations = require('./rawData/occupations');
 const interests = require('./rawData/interests');
@@ -19,6 +19,7 @@ class MachineLearner {
 
     this.printConversionMatrix = this.printConversionMatrix.bind(this);
     this._convertToNumericalMatrix = this._convertToNumericalMatrix.bind(this);
+    this._resizeVectors = this._resizeVectors.bind(this);
   }
 
   printConversionMatrix(type) {
@@ -89,13 +90,15 @@ class MachineLearner {
 
   /**
    * Calculates the cosine angle between two vectors, giving a similarity metric
-   * @param vec1 tf.tensor of a user + product data
-   * @param vec2 tf.tensor of another user + product data
+   * @param baseProfile tf.tensor of a user + product data
+   * @param comparisonProfile tf.tensor of another user + product data
    * @returns {number} -1 <= number <= 1 (cosine of the vectors)
    */
-  _calcSimilarity(vec1, vec2) {
-    return (vec1.dot(vec2).arraySync())
-      / (Math.sqrt(vec1.square().sum().arraySync()) * Math.sqrt(vec2.square().sum().arraySync()));
+  _calcSimilarity(baseProfile, comparisonProfile) {
+    const base = tf.tensor(baseProfile);
+    const comparison = tf.tensor(comparisonProfile);
+    return (base.dot(comparison).arraySync())
+      / (Math.sqrt(base.square().sum().arraySync()) * Math.sqrt(comparison.square().sum().arraySync()));
   }
 
   _convertToNumericalMatrix(user) {
@@ -130,35 +133,58 @@ class MachineLearner {
           const convertedUserMatrix = this._convertToNumericalMatrix(foundProfile);
           this.convertedSize = convertedUserMatrix.length;
 
-          Profile.find({})
+          // find every other user
+          Profile.find({ _id: { $ne: userID } })
+            .populate('purchases')
             .exec()
             .then(allProfiles => {
               if (!allProfiles) {
                 return reject('There are no profiles in the database to recommend from');
               }
               let convertedProfileMatrices = [];
-              let similarityMatrix = [];
+              let unorderedSimilarityMatrix = {};
+              let orderedSimilarityMatrix = {};
+              let mostSimilarUsers = [];
+              let similaritySum = 0;
               for (let prof = 0; prof < allProfiles.length; prof++) {
                 // convert each user's categorical profile to categorical data
                 convertedProfileMatrices.push(this._convertToNumericalMatrix(allProfiles[prof]));
                 this._resizeVectors(convertedUserMatrix, convertedProfileMatrices[prof]);
-                similarityMatrix.push(this._calcSimilarity(convertedUserMatrix, convertedProfileMatrices[prof]));
+                const similarity = this._calcSimilarity(convertedUserMatrix, convertedProfileMatrices[prof]);
+                unorderedSimilarityMatrix[similarity] = prof; // creates an object where the keys are the similarities and the values are the profile from which it came
               }
-
-              allProfiles.forEach(profile => {
-                convertedProfileMatrices.push(this._convertToNumericalMatrix(profile));
-                similarityMatrix.push(this._calcSimilarity(convertedUserMatrix, ))
+              // sort the resulting
+              Object.keys(unorderedSimilarityMatrix).sort((a, b) => b - a).forEach(sim => {
+                orderedSimilarityMatrix[sim] = unorderedSimilarityMatrix[sim];
               });
-              // 2. convert each profile to its associated numerical vector
-              // 3. For each other user compared with myProfile:
-              //        calculate similarity between users
-              // 4. Keep running sum of similarities to other users who have bought the product
-              // 5. If other user has purchased product that my profile hasn't, then attach a 1 as the weight, 0 otherwise
+
+              console.log(JSON.stringify(orderedSimilarityMatrix, null, ' '));
+              // Pick the top 10 similar profiles:
+              const orderedKeys = Object.keys(orderedSimilarityMatrix);
+              for (let key = 0; key < 10; key++) {
+                const keyWeWant = orderedKeys[key];
+                const profileWeWant = orderedSimilarityMatrix[keyWeWant]; // grabs the profile of the user from the first 10 highest similarities
+                mostSimilarUsers.push(allProfiles[profileWeWant]);
+                // calculate the similarity sum of the top 10 users
+                similaritySum += Number(keyWeWant);
+              }
+              console.log(`Similarity Sum: ${similaritySum}`);
+
+              // now we need to calculate a weight of 1 * similarity if comparison user purchased a product
+              // for every product in the db that is not one the current user has purchased:
+              const productsAlreadyPurchased = [];
+              foundProfile.purchases.forEach(product => productsAlreadyPurchased.push(product._id));
+
+              let unorderedRecommendedProducts = {};
+              let orderedRecommendedProducts = {};
+              let mostSimilarProducts = [];
+              
+
             })
             .catch(err => console.log(`Mongo experienced an error retrieving all profiles for recommendations. Error: ${err}`))
-        });
-    })
-      .catch(err => reject(err));
+        })
+        .catch(err => reject(err));
+    });
   }
 
   _resizeVectors(baseUser, comparisonUser) {
