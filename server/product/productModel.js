@@ -2,29 +2,20 @@ const mongoose = require('mongoose');
 const { Schema } = mongoose;
 
 const productSchema = new Schema({
-    manufacturer: {
-        type: String,
-        required: true
-    },
     brand: {
         type: String,
         required: true
     },
-    sub_brand: {
+    product: {
         type: String,
-        required: true,
-        default: 'N/A'
+        required: true
     },
     category: {
         type: String,
         required: true
     },
-    product_type: {
+    department: {
         type: String,
-        required: true
-    },
-    price: {
-        type: Number,
         required: true
     }
 });
