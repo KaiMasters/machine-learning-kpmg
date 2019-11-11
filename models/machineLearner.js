@@ -191,15 +191,29 @@ class MachineLearner {
                 simUser.purchases.forEach(product => {
                   currUserPurchases.push(product._id);
                 });
-                Product.find({ $and: [{ _id: { $nin: productsAlreadyPurchased } }, { _id: { $in: currUserPurchases } }] })
+                Product.find({ $and: [ { _id: { $nin: [...productsAlreadyPurchased] } }, { _id: { $in: [...currUserPurchases] } } ] })
                   .exec()
                   .then(foundProducts => {
                     if (!foundProducts) {
                       return console.log('Compared user did not have any additional products than the base');
                     }
-                    sumProductSimilarity += Number(orderedKeys[prof]);
+                    foundProducts.forEach(p => {
+                      const productSim = Number(orderedKeys[prof]) / similaritySum;
+                      unorderedRecommendedProducts[productSim] = p;
+                    });
                   })
                   .catch(err => console.log(`Error finding products between already purchased and current user purchases: ${err}`));
+              }
+              Object.keys(unorderedRecommendedProducts).sort((a, b) => b - a).forEach(prediction => {
+                orderedRecommendedProducts[prediction] = unorderedRecommendedProducts[prediction];
+              });
+
+              bigReturnObject.orderedRecommendations = orderedRecommendedProducts;
+
+              const orderedKeysRecommendations = Object.keys(orderedRecommendedProducts);
+              for (let key = 0; key < 5; key++) {
+                const keyWeWant = orderedKeysRecommendations[key];
+                const productWeWant = orderedRecommendedProducts[keyWeWant];
               }
             })
             .catch(err => console.log(`Mongo experienced an error retrieving all profiles for recommendations. Error: ${err}`))

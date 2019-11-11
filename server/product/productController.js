@@ -28,7 +28,16 @@ exports.createProduct = (req, res, next) => {
 
 exports.recommendProducts = (req, res, next) => {
   res.json({
-    sook: "Me balls",
-    and: "cook"
+    orderedSimilarities: {},
+    similaritySum: 7.993845875,
+    mostSimilarUsers: [],
+    orderedRecommendations: {},
+    recommendedProducts: [
+      "5dc8dbebc765e4469c50423d",
+      "5dc8dbebc765e4469c504264",
+      "5dc8dbebc765e4469c504290",
+      "5dc8dbebc765e4469c5042a7",
+      "5dc8dbebc765e4469c5042b8"
+    ]
   });
 };
