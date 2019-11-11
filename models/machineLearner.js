@@ -174,52 +174,66 @@ class MachineLearner {
                 similaritySum += Number(keyWeWant);
               }
 
-              bigReturnObject.mostSimilarUsers = mostSimilarUsers;
-
+            //   bigReturnObject.mostSimilarUsers = mostSimilarUsers;
+            //   console.log(JSON.stringify(mostSimilarUsers, null, ' '));
+            //
               // now we need to calculate a weight of 1 * similarity if comparison user purchased a product
               // for every product in the db that is not one the current user has purchased:
               const productsAlreadyPurchased = [];
               foundProfile.purchases.forEach(product => productsAlreadyPurchased.push(product._id));
 
               let unorderedRecommendedProducts = {};
-              let orderedRecommendedProducts = {};
-              let mostSimilarProducts = [];
-              let sumProductSimilarity = 0;
+              let finishedProductFinds = 0;
               for (let prof = 0; prof < mostSimilarUsers.length; prof++) {
                 let currUserPurchases = [];
-                const simUser =  mostSimilarUsers[prof];
+                const simUser = mostSimilarUsers[prof];
                 simUser.purchases.forEach(product => {
                   currUserPurchases.push(product._id);
                 });
                 Product.find({ $and: [ { _id: { $nin: [...productsAlreadyPurchased] } }, { _id: { $in: [...currUserPurchases] } } ] })
-                  .exec()
-                  .then(foundProducts => {
+                  .exec((err, foundProducts) => {
+                    if (err) {
+                      return console.log(`error from mongoose: ${err}`)
+                    }
                     if (!foundProducts) {
                       return console.log('Compared user did not have any additional products than the base');
                     }
                     foundProducts.forEach(p => {
                       const productSim = Number(orderedKeys[prof]) / similaritySum;
-                      unorderedRecommendedProducts[productSim] = p;
+                      unorderedRecommendedProducts[productSim] = p._id;
                     });
-                  })
-                  .catch(err => console.log(`Error finding products between already purchased and current user purchases: ${err}`));
-              }
-              Object.keys(unorderedRecommendedProducts).sort((a, b) => b - a).forEach(prediction => {
-                orderedRecommendedProducts[prediction] = unorderedRecommendedProducts[prediction];
-              });
-
-              bigReturnObject.orderedRecommendations = orderedRecommendedProducts;
-
-              const orderedKeysRecommendations = Object.keys(orderedRecommendedProducts);
-              for (let key = 0; key < 5; key++) {
-                const keyWeWant = orderedKeysRecommendations[key];
-                const productWeWant = orderedRecommendedProducts[keyWeWant];
+                    finishedProductFinds++;
+                    if (finishedProductFinds === mostSimilarUsers.length) {
+                      return this.finishOffMachineLearning(unorderedRecommendedProducts, bigReturnObject)
+                    }
+                  });
               }
             })
             .catch(err => console.log(`Mongo experienced an error retrieving all profiles for recommendations. Error: ${err}`))
         })
         .catch(err => reject(err));
     });
+  }
+
+  finishOffMachineLearning(unordered, bigObject) {
+    let orderedRecommendedProducts = {};
+    let recommendedProducts = [];
+    Object.keys(unordered).sort((a, b) => b - a).forEach(prediction => {
+      orderedRecommendedProducts[prediction] = unordered[prediction];
+    });
+
+    bigObject.orderedRecommendations = orderedRecommendedProducts;
+    console.log(JSON.stringify(orderedRecommendedProducts, null, ' '));
+
+      const orderedKeysRecommendations = Object.keys(orderedRecommendedProducts);
+      for (let key = 0; key < 5; key++) {
+        const keyWeWant = orderedKeysRecommendations[key];
+        const productWeWant = orderedRecommendedProducts[keyWeWant];
+        recommendedProducts.push(productWeWant);
+      }
+      bigObject.recommendedProducts = recommendedProducts;
+      console.log(JSON.stringify(recommendedProducts, null, ' '));
+      return bigObject;
   }
 
   _resizeVectors(baseUser, comparisonUser) {
