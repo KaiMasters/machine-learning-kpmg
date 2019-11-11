@@ -14,6 +14,11 @@ exports.newProfile = function() {
       .exists()
       .withMessage(`You must have some interests in life! Don't be a loser!`)
       .isArray()
-      .withMessage('Interests must be an array')
+      .withMessage('Interests must be an array'),
+    check('purchases')
+      .exists()
+      .withMessage('Profile must contain products that have been purchased')
+      .isArray()
+      .withMessage('Products must be an array of MongoIDs')
   ]
 };

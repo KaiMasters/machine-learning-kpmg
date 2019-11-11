@@ -10,10 +10,12 @@ const profileSchema = new Schema({
         type: Schema.Types.Array,
         required: true,
     },
-    purchases: {
+    purchases: [
+      {
         type: Schema.Types.ObjectId,
         ref: 'product'
-    }
+      }
+    ]
 });
 
 module.exports = mongoose.model('profile', profileSchema);
