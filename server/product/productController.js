@@ -31,7 +31,7 @@ exports.recommendProducts = async (req, res, next) => {
    MachineLearner.recommend("5dc9407ca6aca9469c8559b7")
     .then(data => {
       console.log(data);
-      res.json(data)
+      return res.json(data)
     })
     .catch(err => console.log(`Error occurred: ${err}`));
    // res.json({
