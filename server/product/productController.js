@@ -1,5 +1,6 @@
 const Product = require('./productModel');
 const { validationResult } = require('express-validator');
+const MachineLearner = require('../../models/machineLearner');
 
 exports.getProducts = (req, res, next) => {
   console.log('Obtaining products from the database...');
@@ -27,17 +28,7 @@ exports.createProduct = (req, res, next) => {
 };
 
 exports.recommendProducts = (req, res, next) => {
-  res.json({
-    orderedSimilarities: {},
-    similaritySum: 7.993845875,
-    mostSimilarUsers: [],
-    orderedRecommendations: {},
-    recommendedProducts: [
-      "5dc8dbebc765e4469c50423d",
-      "5dc8dbebc765e4469c504264",
-      "5dc8dbebc765e4469c504290",
-      "5dc8dbebc765e4469c5042a7",
-      "5dc8dbebc765e4469c5042b8"
-    ]
-  });
+  MachineLearner.recommend("5dc9407ca6aca9469c8559b7")
+    .then(data => res.json(data))
+    .catch(err => console.log(`Error occurred: ${err}`));
 };
