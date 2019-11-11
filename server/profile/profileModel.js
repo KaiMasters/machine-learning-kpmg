@@ -6,10 +6,12 @@ const profileSchema = new Schema({
         type: String,
         required: true
     },
-    interests: {
-        type: Schema.Types.Array,
+    interests: [
+      {
+        type: String,
         required: true,
-    },
+      }
+    ],
     purchases: [
       {
         type: Schema.Types.ObjectId,
